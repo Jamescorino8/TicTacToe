@@ -18,15 +18,18 @@ body {
     color: white;
     font-size: 5rem;
     margin: auto;
-    padding: 0px 20px 0px 20px;
+    padding: 5px 20px 0px 20px;
     overflow: hidden;
     text-align: center;
+    text-decoration: underline;
 }
 
 #turnDisplay {
     color: hsl(0, 0%, 75%);
-    font-size: 1rem;
+    font-size: 2rem;
     text-align: center;
+    margin: 0px 0px 5px 0px;
+
 }
 
 #cells {
@@ -34,12 +37,12 @@ body {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
     gap: 10px;
-    padding: 25px;
+    padding: 0px 20px 20px 20px;
 }
 
 button {
     height: 100px;
-    border-radius: 25px;
+    border-radius: 5px;
     font-weight: bold;
     font-size: 3rem;
     background-color: hsl(0, 0%, 80%);
@@ -59,7 +62,7 @@ button:disabled {
     color: initial;
     opacity: 1;
     height: 100px;
-    border-radius: 25px;
+    border-radius: 5px;
     font-weight: bold;
     font-size: 3rem;
     background-color: hsl(0, 0%, 80%);
@@ -73,10 +76,7 @@ button:disabled {
     padding: 0px 20px 20px 20px;
     gap: 10px;
 }
-#startBtn {
+.operatorBtn {
     width: 100%;
-}
-
-#endBtn {
-    width: 100%;
+    border-radius: 15px;
 }
