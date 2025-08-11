@@ -4,11 +4,11 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    font-family: Arial, sans-serif;
     background-color: hsla(0, 0%, 95%);
 }
 
 #tic-tac-toe {
-    font-family: Arial, sans-serif;
     max-width: 500px;
     border-radius: 15px;
     background-color: hsla(0, 0%, 15%);
