@@ -8,9 +8,18 @@ const winConditions = [[0, 1, 2], [3, 4, 5], [6, 7, 8],
 
 let board;
 let xTurn = true;
+let isComp = false;
+
+function titleSelect(mode) {
+    console.log(mode);
+    isComp = mode === 'comp';
+    localStorage.setItem('currentMode', isComp ? 'true' : 'false');
+    window.location.href = 'index.html';
+}
 
 function cellClick(cellNum) {
     const currentCell = document.getElementById(`cell-${cellNum}`);
+    isComp = localStorage.getItem('currentMode') === 'true';
     
     board[cellNum] = xTurn ? 'X' : 'O';
     turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
@@ -18,23 +27,60 @@ function cellClick(cellNum) {
     currentCell.textContent = board[cellNum];
     currentCell.disabled = true;
 
-    isWin();
-    
+    if (isWin(board)) {
+        end(xTurn ? 'X' : 'O');
+    } else if (isWin(board) === 'tie') {
+        end('tie');
+    }
+    xTurn = !xTurn;
+
+    if (isComp) compTurn();
+}
+
+function compTurn() {
+    let openCells = [];
+    board.forEach((cell, i) => {
+        if (cell === '') openCells.push(i);
+    });
+
+    let cellNum = openCells[Math.floor(Math.random() * openCells.length)];
+    const currentCell = document.getElementById(`cell-${cellNum}`);
+
+    board[cellNum] = 'O';
+    currentCell.textContent = board[cellNum];
+    currentCell.disabled = true;
+
+    if (isWin(board)) {
+        end(xTurn ? 'X' : 'O');
+    } else if (isWin(board) === 'tie') {
+        end('tie');
+    }
+
     xTurn = !xTurn;
 }
 
-function isWin() {
+function compMove(openCells) {
+    let cellNum;
+    let cells = openCells;
+    let boardCopy = [...board];
+    for (let i = 0; i < boardCopy.length; i++) {
+        
+    }
+}
+
+function isWin(currentBoard) {
     for (const condition of winConditions) {
         const [a, b, c] = condition;
-        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            end(board[a]);
-            return null;
+        if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
+            // end(board[a]);
+            return true;
         }
     }
-    if (board.every(cell => cell !== '')) {
-        end('tie');
-        return null;
+    if (currentBoard.every(cell => cell !== '')) {
+        // end('tie');
+        return 'tie';
     }
+    return false;
 }
 
 function end(turn) {
@@ -64,7 +110,7 @@ function start() {
              '', '', '',
              '', '', ''];
     
-    turnDisplay.textContent = "X's Turn";
+    if (!isComp) turnDisplay.textContent = "X's Turn";
     startBtn.textContent = "Restart";
     startBtn.hidden = true;
     titleBtn.hidden = true;
