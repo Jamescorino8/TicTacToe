@@ -1,4 +1,3 @@
-
 // Tic-Tac-Toe Game Logic
 
 
@@ -40,12 +39,18 @@ function cellClick(cellNum) {
     currentCell.textContent = board[cellNum];
     currentCell.disabled = true;
 
-    // Check for win or tie
-    console.log(board);
-    if (isWin(board)) {
-        end(xTurn ? 'X' : 'O');
-    } else if (isWin(board) === 'tie') {
+    // Refactored win/tie check
+    const result = getGameResult(board);
+    if (result === 'X' || result === 'O') {
+        console.debug("X WIN w/CPU");
+        console.log(board);
+        end(result);
+        return;
+    } else if (result === 'tie') {
+        console.debug("TIE w/CPU");
+        console.log(board);
         end('tie');
+        return;
     }
     xTurn = !xTurn;
 
@@ -73,35 +78,40 @@ function compTurn() {
     currentCell.textContent = board[cellNum];
     currentCell.disabled = true;
 
-    // Check for win or tie
-    if (isWin(board)) {
-        end('O');
-    } else if (isWin(board) === 'tie') {
+    // Refactored win/tie check
+    const result = getGameResult(board);
+    if (result === 'X' || result === 'O') {
+        console.debug("O WIN w/CPU");
+        console.log(board);
+        end(result);
+        return;
+    } else if (result === 'tie') {
+        console.debug("O TIE WIN w/CPU");
+        console.log(board);
         end('tie');
+        return;
     }
 
     xTurn = !xTurn;
 }
 
-// function compMove(openCells) {
-//     let boardCopy = [...board];
-
-// }
-
-// Checks if the current board is a win or tie
-// Returns true if win, 'tie' if tie, false otherwise
-function isWin(currentBoard) {
+// Checks for a win or tie
+// Returns 'X' or 'O' if there is a winner, 'tie' if tie, or null if game continues
+function getGameResult(currentBoard) {
     for (const condition of winConditions) {
         const [a, b, c] = condition;
-        if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
-            return true;
+        if (
+            currentBoard[a] &&
+            currentBoard[a] === currentBoard[b] &&
+            currentBoard[a] === currentBoard[c]
+        ) {
+            return currentBoard[a]; // Return 'X' or 'O'
         }
     }
-    // If all cells are filled and no win, it's a tie
     if (currentBoard.every(cell => cell !== '')) {
         return 'tie';
     }
-    return false;
+    return null;
 }
 
 // Ends the game, disables board, and displays result
