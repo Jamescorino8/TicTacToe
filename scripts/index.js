@@ -16,7 +16,7 @@ const winConditions = [
 
 let board;         // Array representing the board state
 let xTurn = true;  // true if it's X's turn, false for O
-let isComp = false; // true if playing against CPU
+let isComp = localStorage.getItem('currentMode') === 'true'; // true if playing against CPU
 
 // Handles mode selection from the title screen (co-op or CPU)
 function titleSelect(mode) {
