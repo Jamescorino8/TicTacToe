@@ -33,22 +33,18 @@ function cellClick(cellNum) {
     // Set the board state for this cell
     board[cellNum] = xTurn ? 'X' : 'O';
     // Update turn display
-    turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
+    if (!isComp) turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
 
     // Update UI for the clicked cell
     currentCell.textContent = board[cellNum];
     currentCell.disabled = true;
 
-    // Refactored win/tie check
+    // Win/tie check
     const result = getGameResult(board);
     if (result === 'X' || result === 'O') {
-        console.debug("X WIN w/CPU");
-        console.log(board);
         end(result);
         return;
     } else if (result === 'tie') {
-        console.debug("TIE w/CPU");
-        console.log(board);
         end('tie');
         return;
     }
@@ -70,7 +66,7 @@ function compTurn() {
     if (openCells.length === 0) return;
 
     // Pick a random open cell
-    let cellNum = openCells[Math.floor(Math.random() * openCells.length)];
+    let cellNum = compMove(openCells);
     const currentCell = document.getElementById(`cell-${cellNum}`);
 
     // Set board and UI for computer's move
@@ -78,21 +74,43 @@ function compTurn() {
     currentCell.textContent = board[cellNum];
     currentCell.disabled = true;
 
-    // Refactored win/tie check
+    // Win/tie check
     const result = getGameResult(board);
     if (result === 'X' || result === 'O') {
-        console.debug("O WIN w/CPU");
-        console.log(board);
         end(result);
         return;
     } else if (result === 'tie') {
-        console.debug("O TIE WIN w/CPU");
-        console.log(board);
         end('tie');
         return;
     }
 
     xTurn = !xTurn;
+}
+
+// Find optimal move for CPU
+// Return index of best possible move on board, otherwise random.
+function compMove(openCells) {
+    let optimalMove = openCells[Math.floor(Math.random() * openCells.length)];
+
+    // Check if O's are one move away from win and return index to win
+    for (let i = 0; i < openCells.length; i++) {
+        let boardCopy = [...board];
+        boardCopy[openCells[i]] = 'O';
+        const result = getGameResult(boardCopy);
+        if (result === 'O') {
+            optimalMove = openCells[i];
+        }
+    }
+    // Check if X's are one move away from win and return index to defend loss
+    for (let i = 0; i < openCells.length; i++) {
+        let boardCopy = [...board];
+        boardCopy[openCells[i]] = 'X';
+        const result = getGameResult(boardCopy);
+        if (result === 'X') {
+            optimalMove = openCells[i];
+        }
+    }
+    return optimalMove;
 }
 
 // Checks for a win or tie
@@ -149,6 +167,7 @@ function start() {
              '', '', ''];
     
     // Set initial turn display
+    turnDisplay.textContent = "";
     if (!isComp) turnDisplay.textContent = "X's Turn";
     startBtn.textContent = "Restart";
     startBtn.hidden = true;
