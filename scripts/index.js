@@ -5,6 +5,7 @@ const turnDisplay = document.getElementById('turnDisplay');
 const startBtn = document.getElementById('startBtn');
 const titleBtn = document.getElementById('titleBtn');
 const endBtn = document.getElementById('endBtn');
+const onlineBtn = document.getElementById('onlineBtn');
 
 // All possible win conditions for a 3x3 board
 const winConditions = [
@@ -15,24 +16,26 @@ const winConditions = [
 
 let board;         // Array representing the board state
 let xTurn = true;  // true if it's X's turn, false for O
-let isComp = false; // true if playing against CPU
+let mode = localStorage.getItem('currentMode'); // Retrieve mode from storage
 
 // Handles mode selection from the title screen (co-op or CPU)
 function titleSelect(mode) {
-    isComp = mode === 'comp';
-    localStorage.setItem('currentMode', isComp ? 'true' : 'false'); // Store mode selected as string representation
+    this.mode = mode;
+    if (mode === 'online') {
+        // TODO: Add online logic here
+    }
+    localStorage.setItem('currentMode', mode); // Store mode as string
     window.location.href = 'index.html';
 }
 
 // Handles a player's move when a cell is clicked
 function cellClick(cellNum) {
     const currentCell = document.getElementById(`cell-${cellNum}`);
-    isComp = localStorage.getItem('currentMode') === 'true'; // Retrieve selected mode from storage
     
     // Set the board state for this cell
     board[cellNum] = xTurn ? 'X' : 'O';
     // Update turn display
-    if (!isComp) turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
+    if (mode === 'coop') turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
 
     // Update UI for the clicked cell
     currentCell.textContent = board[cellNum];
@@ -50,7 +53,7 @@ function cellClick(cellNum) {
     xTurn = !xTurn;
 
     // If playing against CPU, trigger computer's move
-    if (isComp) compTurn();
+    if (mode === 'cpu') compTurn();
 }
 
 // Handles the computer's move (random open cell)
@@ -165,9 +168,11 @@ function start() {
              '', '', '',
              '', '', ''];
     
+    // Retrieve mode from storage
+    mode = localStorage.getItem('currentMode') || 'coop';
     // Set initial turn display
     turnDisplay.textContent = "";
-    if (!isComp) turnDisplay.textContent = "X's Turn";
+    if (mode === 'coop') turnDisplay.textContent = "X's Turn";
     startBtn.textContent = "Restart";
     startBtn.hidden = true;
     titleBtn.hidden = true;
