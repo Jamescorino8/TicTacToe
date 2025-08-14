@@ -6,6 +6,11 @@ const startBtn = document.getElementById('startBtn');
 const titleBtn = document.getElementById('titleBtn');
 const endBtn = document.getElementById('endBtn');
 const onlineBtn = document.getElementById('onlineBtn');
+const xBtn = document.getElementById('xBtn');
+const oBtn = document.getElementById('oBtn');
+const cells = document.getElementById('cells');
+const markerContainer = document.getElementById('marker-container'); 
+const markerDisplay = document.getElementById('marker-display');
 
 // All possible win conditions for a 3x3 board
 const winConditions = [
@@ -14,18 +19,31 @@ const winConditions = [
     [0, 4, 8], [2, 4, 6]             // diagonals
 ];
 
-let board;         // Array representing the board state
-let xTurn = true;  // true if it's X's turn, false for O
-let mode = localStorage.getItem('currentMode'); // Retrieve mode from storage
+let board; // Array representing the board state
+let xTurn; // true if it's X's turn, false for O
+let mode = localStorage.getItem('selectedMode'); // Retrieve selected mode from storage
 
-// Handles mode selection from the title screen (co-op or CPU)
+// Handles mode selection from the title screen (co-op, cpu, or online)
 function titleSelect(mode) {
     this.mode = mode;
-    if (mode === 'online') {
-        // TODO: Add online logic here
-    }
-    localStorage.setItem('currentMode', mode); // Store mode as string
+    // if (mode === 'online') {
+        
+    // }
+    localStorage.setItem('selectedMode', mode); // Store mode as string
     window.location.href = 'index.html';
+}
+
+// Retrieve user's selected marker
+function selectMarker(marker) {
+    localStorage.setItem('selectedMarker', marker);
+    xTurn = marker === 'X';
+    markerContainer.hidden = true;
+    startBtn.hidden = false;
+
+    const hiddenBtns = document.querySelectorAll('#cells button');
+    hiddenBtns.forEach(btn => {
+        btn.hidden = false;
+    });
 }
 
 // Handles a player's move when a cell is clicked
@@ -71,7 +89,7 @@ function compTurn() {
     const currentCell = document.getElementById(`cell-${cellNum}`);
 
     // Set board and UI for computer's move
-    board[cellNum] = 'O';
+    board[cellNum] = xTurn ? 'X' : 'O';
     currentCell.textContent = board[cellNum];
     currentCell.disabled = true;
 
@@ -93,21 +111,22 @@ function compTurn() {
 function compMove(openCells) {
     let optimalMove = openCells[Math.floor(Math.random() * openCells.length)];
 
-    // Check if X's are one move away from win and return index to defend loss
+    // Check if opponent one move away from win and return index to defend loss
     for (let i = 0; i < openCells.length; i++) {
         let boardCopy = [...board];
-        boardCopy[openCells[i]] = 'X';
+        boardCopy[openCells[i]] = xTurn ? 'O' : 'X';
         const result = getGameResult(boardCopy);
-        if (result === 'X') {
+        if (result === (xTurn ? 'O' : 'X')) {
             optimalMove = openCells[i];
         }
     }
     // Check if O's are one move away from win and return index to win
+    // Override previous optimal move to prioritize winning over blocking
     for (let i = 0; i < openCells.length; i++) {
         let boardCopy = [...board];
-        boardCopy[openCells[i]] = 'O';
+        boardCopy[openCells[i]] = xTurn ? 'X' : 'O';
         const result = getGameResult(boardCopy);
-        if (result === 'O') {
+        if (result === (xTurn ? 'X' : 'O')) {
             optimalMove = openCells[i];
         }
     }
@@ -163,16 +182,14 @@ function start() {
     });
 
     // Reset game state
-    xTurn = true;
+    xTurn = localStorage.getItem('selectedMarker') === 'X'; // Retrieve selected marker from storage
     board = ['', '', '',
              '', '', '',
              '', '', ''];
     
-    // Retrieve mode from storage
-    mode = localStorage.getItem('currentMode') || 'coop';
     // Set initial turn display
     turnDisplay.textContent = "";
-    if (mode === 'coop') turnDisplay.textContent = "X's Turn";
+    if (mode === 'coop') xTurn ? turnDisplay.textContent = "X's Turn" : turnDisplay.textContent = "O's Turn";
     startBtn.textContent = "Restart";
     startBtn.hidden = true;
     titleBtn.hidden = true;

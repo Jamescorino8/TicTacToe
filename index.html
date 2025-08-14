@@ -13,26 +13,33 @@
 
             <h1 id="myH1">Tic-Tac-Toe</h1>
             <h2 id="turnDisplay"></h2>
+
+            <div id="marker-container">
+                <h2 id="marker-display">Choose a Marker</h2>
+                <button type="button" id="xBtn" onclick="selectMarker('X')">X</button>
+                <button type="button" id="oBtn" onclick="selectMarker('O')">O</button>
+            </div>
             
             <div id="cells">
-                <button type="button" id="cell-0" onclick="cellClick(0)" disabled>⊠</button>
-                <button type="button" id="cell-1" onclick="cellClick(1)" disabled>⊠</button>
-                <button type="button" id="cell-2" onclick="cellClick(2)" disabled>⊠</button>
-                <button type="button" id="cell-3" onclick="cellClick(3)" disabled>⊠</button>
-                <button type="button" id="cell-4" onclick="cellClick(4)" disabled>⊠</button>
-                <button type="button" id="cell-5" onclick="cellClick(5)" disabled>⊠</button>
-                <button type="button" id="cell-6" onclick="cellClick(6)" disabled>⊠</button>
-                <button type="button" id="cell-7" onclick="cellClick(7)" disabled>⊠</button>
-                <button type="button" id="cell-8" onclick="cellClick(8)" disabled>⊠</button>
+                <button type="button" id="cell-0" onclick="cellClick(0)" disabled hidden>⊠</button>
+                <button type="button" id="cell-1" onclick="cellClick(1)" disabled hidden>⊠</button>
+                <button type="button" id="cell-2" onclick="cellClick(2)" disabled hidden>⊠</button>
+                <button type="button" id="cell-3" onclick="cellClick(3)" disabled hidden>⊠</button>
+                <button type="button" id="cell-4" onclick="cellClick(4)" disabled hidden>⊠</button>
+                <button type="button" id="cell-5" onclick="cellClick(5)" disabled hidden>⊠</button>
+                <button type="button" id="cell-6" onclick="cellClick(6)" disabled hidden>⊠</button>
+                <button type="button" id="cell-7" onclick="cellClick(7)" disabled hidden>⊠</button>
+                <button type="button" id="cell-8" onclick="cellClick(8)" disabled hidden>⊠</button>
             </div>
 
             <div id="operator-container">
-                <button type="button" id="startBtn" class="operatorBtn" onclick="start()">Start</button>
+                <button type="button" id="startBtn" class="operatorBtn" onclick="start()" hidden>Start</button>
                 <button type="button" id="titleBtn" class="operatorBtn" onclick="window.location.href='title.html'">Title</button>
                 <button type="button" id="endBtn" class="operatorBtn" onclick="end()" hidden>Give Up</button>
             </div>
         </div>
         
         <script src="./scripts/index.js" async defer></script>
+        <script src="/socket.io/socket.io.js"></script>
     </body>
 </html>
