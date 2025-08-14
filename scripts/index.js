@@ -1,6 +1,5 @@
 // Tic-Tac-Toe Game Logic
 
-
 // DOM elements
 const turnDisplay = document.getElementById('turnDisplay');
 const startBtn = document.getElementById('startBtn');
@@ -16,7 +15,7 @@ const winConditions = [
 
 let board;         // Array representing the board state
 let xTurn = true;  // true if it's X's turn, false for O
-let isComp = localStorage.getItem('currentMode') === 'true'; // true if playing against CPU
+let isComp = false; // true if playing against CPU
 
 // Handles mode selection from the title screen (co-op or CPU)
 function titleSelect(mode) {
@@ -53,7 +52,6 @@ function cellClick(cellNum) {
     // If playing against CPU, trigger computer's move
     if (isComp) compTurn();
 }
-
 
 // Handles the computer's move (random open cell)
 function compTurn() {
@@ -92,15 +90,6 @@ function compTurn() {
 function compMove(openCells) {
     let optimalMove = openCells[Math.floor(Math.random() * openCells.length)];
 
-    // Check if O's are one move away from win and return index to win
-    for (let i = 0; i < openCells.length; i++) {
-        let boardCopy = [...board];
-        boardCopy[openCells[i]] = 'O';
-        const result = getGameResult(boardCopy);
-        if (result === 'O') {
-            optimalMove = openCells[i];
-        }
-    }
     // Check if X's are one move away from win and return index to defend loss
     for (let i = 0; i < openCells.length; i++) {
         let boardCopy = [...board];
@@ -110,6 +99,16 @@ function compMove(openCells) {
             optimalMove = openCells[i];
         }
     }
+    // Check if O's are one move away from win and return index to win
+    for (let i = 0; i < openCells.length; i++) {
+        let boardCopy = [...board];
+        boardCopy[openCells[i]] = 'O';
+        const result = getGameResult(boardCopy);
+        if (result === 'O') {
+            optimalMove = openCells[i];
+        }
+    }
+    
     return optimalMove;
 }
 
