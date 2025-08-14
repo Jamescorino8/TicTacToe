@@ -86,21 +86,67 @@ button:disabled {
     color: white;
     font-size: 2rem;
     margin: auto;
-}
-
-#marker-container {
-    padding: 0 0 15px 0;
+    padding: 0 0 20px 0;
 }
 
 #marker-container > h2 {
     color: hsl(0, 0%, 75%);
     font-size: 2rem;
     text-align: center;
-    margin: 30px 0px 5px 0px;
+    margin: 0px 0px 5px 0px;
 }
 
 #marker-container button {
     height: auto;
     width: 25%;
     font-size: 4rem;
+}
+
+#title-container {
+    background-color: hsla(0, 0%, 15%);
+    max-width: 500px;
+    border-radius: 15px;
+}
+
+#title-container h2 {
+    color: white;
+    font-size: 2rem;
+    margin: auto;
+    text-align: center;
+    /* padding-bottom: 15px; */
+}
+
+#title-container h3 {
+    color: white;
+    font-size: 1rem;
+    margin: auto;
+    overflow: hidden;
+    text-align: center;
+    margin: 0px 0px 5px 0px;
+}
+
+#button-container {
+    display: flex;
+    justify-content: center;
+    padding: 15px 20px 20px 20px;
+    gap: 10px;
+}
+
+#button-container button {
+    height: 100px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 2.5rem;
+    background-color: hsl(0, 0%, 80%);
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 15px;
+}
+
+#button-container button:hover {
+    background-color: hsl(0, 0%, 70%);
+}
+#button-container button:active {
+    background-color: hsl(0, 0%, 60%);
 }

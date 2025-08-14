@@ -6,11 +6,10 @@ const startBtn = document.getElementById('startBtn');
 const titleBtn = document.getElementById('titleBtn');
 const endBtn = document.getElementById('endBtn');
 const onlineBtn = document.getElementById('onlineBtn');
-const xBtn = document.getElementById('xBtn');
-const oBtn = document.getElementById('oBtn');
 const cells = document.getElementById('cells');
 const markerContainer = document.getElementById('marker-container'); 
-const markerDisplay = document.getElementById('marker-display');
+const operatorContainer = document.getElementById('operator-container');
+const titleContainer = document.getElementById('title-container');
 
 // All possible win conditions for a 3x3 board
 const winConditions = [
@@ -21,16 +20,23 @@ const winConditions = [
 
 let board; // Array representing the board state
 let xTurn; // true if it's X's turn, false for O
-let mode = localStorage.getItem('selectedMode'); // Retrieve selected mode from storage
+let mode; // Retrieve selected mode from storage
 
 // Handles mode selection from the title screen (co-op, cpu, or online)
-function titleSelect(mode) {
-    this.mode = mode;
-    // if (mode === 'online') {
-        
-    // }
-    localStorage.setItem('selectedMode', mode); // Store mode as string
-    window.location.href = 'index.html';
+function modeSelect(selectedMode) {
+    mode = selectedMode;
+    if (mode === 'online') {
+        const socket = io(); // Initialize socket.io for online mode
+        socket.emit('joinRoom', 'room123');
+        // Skip marker selection (P1 = 'X', P2 = 'O')
+        markerContainer.hidden = true;
+        startBtn.hidden = false;
+    } else {
+        titleContainer.hidden = true;
+        markerContainer.hidden = false;
+        operatorContainer.style = 'flex';
+        titleBtn.hidden = false;
+    }
 }
 
 // Retrieve user's selected marker
@@ -39,11 +45,7 @@ function selectMarker(marker) {
     xTurn = marker === 'X';
     markerContainer.hidden = true;
     startBtn.hidden = false;
-
-    const hiddenBtns = document.querySelectorAll('#cells button');
-    hiddenBtns.forEach(btn => {
-        btn.hidden = false;
-    });
+    cells.style.display = 'grid';
 }
 
 // Handles a player's move when a cell is clicked
@@ -155,8 +157,8 @@ function getGameResult(currentBoard) {
 
 // Ends the game, disables board, and displays result
 function end(turn) {
-    // Disable all non-operator buttons
-    const disabledBtns = document.querySelectorAll('button:not(:disabled):not(.operatorBtn)');
+    // Disable all cell buttons
+    const disabledBtns = document.querySelectorAll('#cells button');
     disabledBtns.forEach(btn => btn.disabled = true);
     // Show result message
     if (turn === 'X' || turn === 'O') {
@@ -194,4 +196,25 @@ function start() {
     startBtn.hidden = true;
     titleBtn.hidden = true;
     endBtn.hidden = false;
+}
+
+// Reset UI and game state to default (SPA style)
+function resetToTitleScreen() {
+    // Hide all game containers
+    markerContainer.hidden = true;
+    cells.style.display = 'none';
+    operatorContainer.style.display = 'none';
+    titleContainer.hidden = false;
+    turnDisplay.textContent = '';
+    startBtn.hidden = true;
+    startBtn.textContent = "Start";
+
+    const disabledBtns = document.querySelectorAll('button:disabled');
+    disabledBtns.forEach(btn => {
+        btn.textContent = '⊠';
+    });
+
+    board = undefined; // Reset array representing the board state
+    xTurn = undefined; // Reset true if it's X's turn, false for O
+    mode = undefined; // Reset selected mode
 }
