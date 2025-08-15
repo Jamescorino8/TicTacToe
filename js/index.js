@@ -22,15 +22,59 @@ let board; // Array representing the board state
 let xTurn; // true if it's X's turn, false for O
 let mode; // Retrieve selected mode from storage
 
+// Initialize socket variable (will be assigned if online mode)
+let socket;
+
+// Player-specific variables for online mode
+let myMarker; // 'X' or 'O' for this player
+let myTurn = false; // true if it's this player's turn
+
 // Handles mode selection from the title screen (co-op, cpu, or online)
 function modeSelect(selectedMode) {
     mode = selectedMode;
     if (mode === 'online') {
-        const socket = io(); // Initialize socket.io for online mode
+        if (!socket) socket = io(); // Initialize socket.io for online mode (only once)
         socket.emit('joinRoom', 'room123');
+        titleContainer.hidden = true;
         // Skip marker selection (P1 = 'X', P2 = 'O')
         markerContainer.hidden = true;
         startBtn.hidden = false;
+
+        // Listen for marker assignment
+        socket.on('markerAssigned', (marker) => {
+            myMarker = marker;
+            xTurn = marker === 'X';
+            turnDisplay.textContent = `${marker}'s Turn`;
+        });
+
+        // Listen for waiting status
+        socket.on('waiting', () => {
+            turnDisplay.textContent = 'Waiting for player...';
+            titleBtn.hidden = false;
+        });
+
+        // Listen for game start
+        socket.on('startGame', () => {
+            turnDisplay.textContent = xTurn ? "You are X's" : "You are O's";
+            cells.style.display = 'grid';
+            operatorContainer.style.display = 'flex';
+            startBtn.hidden = false;
+            titleBtn.hidden = false;
+        });
+
+        // Listen for moves from other player
+        socket.on('move', (data) => {
+            const currentCell = document.getElementById(`cell-${data.cellNum}`);
+            board[data.cellNum] = data.symbol;
+            currentCell.textContent = data.symbol;
+            currentCell.disabled = true;
+            // Update turn
+            xTurn = !xTurn;
+            myTurn = true;
+            turnDisplay.textContent = `${myMarker}'s Turn`;
+        });
+
+        
     } else {
         titleContainer.hidden = true;
         markerContainer.hidden = false;
@@ -51,17 +95,35 @@ function selectMarker(marker) {
 // Handles a player's move when a cell is clicked
 function cellClick(cellNum) {
     const currentCell = document.getElementById(`cell-${cellNum}`);
-    
-    // Set the board state for this cell
-    board[cellNum] = xTurn ? 'X' : 'O';
-    // Update turn display
-    if (mode === 'coop') turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
 
-    // Update UI for the clicked cell
+    if (mode === 'online') {
+        // Only allow move if it's your turn and cell is empty
+        if (!myTurn || board[cellNum]) return;
+        socket.emit('move', { cellNum, symbol: myMarker });
+        board[cellNum] = myMarker;
+        currentCell.textContent = myMarker;
+        currentCell.disabled = true;
+        // Update turn
+        xTurn = !xTurn;
+        myTurn = false;
+        turnDisplay.textContent = `${myMarker === 'X' ? 'O' : 'X'}'s Turn`;
+        // Win/tie check
+        const result = getGameResult(board);
+        if (result === 'X' || result === 'O') {
+            end(result);
+            return;
+        } else if (result === 'tie') {
+            end('tie');
+            return;
+        }
+        return;
+    }
+
+    // Local/CPU mode
+    board[cellNum] = xTurn ? 'X' : 'O';
+    if (mode === 'coop') turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
     currentCell.textContent = board[cellNum];
     currentCell.disabled = true;
-
-    // Win/tie check
     const result = getGameResult(board);
     if (result === 'X' || result === 'O') {
         end(result);
@@ -71,8 +133,6 @@ function cellClick(cellNum) {
         return;
     }
     xTurn = !xTurn;
-
-    // If playing against CPU, trigger computer's move
     if (mode === 'cpu') compTurn();
 }
 
