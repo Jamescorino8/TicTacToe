@@ -33,37 +33,45 @@ let myTurn = false; // true if it's this player's turn
 function modeSelect(selectedMode) {
     mode = selectedMode;
     if (mode === 'online') {
+        console.debug("online start");
         if (!socket) socket = io(); // Initialize socket.io for online mode (only once)
         socket.emit('joinRoom', 'room123');
         titleContainer.hidden = true;
         // Skip marker selection (P1 = 'X', P2 = 'O')
-        markerContainer.hidden = true;
-        startBtn.hidden = false;
+        operatorContainer.style.display = 'flex';
+        startBtn.hidden = true;
 
         // Listen for marker assignment
         socket.on('markerAssigned', (marker) => {
+            console.debug("on markerAssigned");
             myMarker = marker;
             xTurn = marker === 'X';
-            turnDisplay.textContent = `${marker}'s Turn`;
+            myTurn = xTurn;
         });
 
         // Listen for waiting status
         socket.on('waiting', () => {
+            console.debug("on waiting");
             turnDisplay.textContent = 'Waiting for player...';
             titleBtn.hidden = false;
         });
 
         // Listen for game start
         socket.on('startGame', () => {
-            turnDisplay.textContent = xTurn ? "You are X's" : "You are O's";
+            console.debug("on startGame");
             cells.style.display = 'grid';
-            operatorContainer.style.display = 'flex';
-            startBtn.hidden = false;
-            titleBtn.hidden = false;
+            start();
         });
+
+        // // Listen for when player leaves
+        // socket.on('playerLeft', () => {
+        //     console.debug("on playerLeft");
+            
+        // });
 
         // Listen for moves from other player
         socket.on('move', (data) => {
+            console.debug("on move");
             const currentCell = document.getElementById(`cell-${data.cellNum}`);
             board[data.cellNum] = data.symbol;
             currentCell.textContent = data.symbol;
@@ -74,7 +82,10 @@ function modeSelect(selectedMode) {
             turnDisplay.textContent = `${myMarker}'s Turn`;
         });
 
-        
+        // Listen for game end from server
+        socket.on('gameEnd', (result) => {
+            end(result);
+        });
     } else {
         titleContainer.hidden = true;
         markerContainer.hidden = false;
@@ -99,6 +110,7 @@ function cellClick(cellNum) {
     if (mode === 'online') {
         // Only allow move if it's your turn and cell is empty
         if (!myTurn || board[cellNum]) return;
+
         socket.emit('move', { cellNum, symbol: myMarker });
         board[cellNum] = myMarker;
         currentCell.textContent = myMarker;
@@ -109,6 +121,18 @@ function cellClick(cellNum) {
         turnDisplay.textContent = `${myMarker === 'X' ? 'O' : 'X'}'s Turn`;
         // Win/tie check
         const result = getGameResult(board);
+        if (result === 'X' || result === 'O' || result === 'tie') {
+            socket.emit('gameEnd', result); 
+            return;
+        }
+        return;
+    } else {
+        // Local/CPU mode
+        board[cellNum] = xTurn ? 'X' : 'O';
+        if (mode === 'coop') turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
+        currentCell.textContent = board[cellNum];
+        currentCell.disabled = true;
+        const result = getGameResult(board);
         if (result === 'X' || result === 'O') {
             end(result);
             return;
@@ -116,24 +140,9 @@ function cellClick(cellNum) {
             end('tie');
             return;
         }
-        return;
+        xTurn = !xTurn;
+        if (mode === 'cpu') compTurn();
     }
-
-    // Local/CPU mode
-    board[cellNum] = xTurn ? 'X' : 'O';
-    if (mode === 'coop') turnDisplay.textContent = `${xTurn ? 'O' : 'X'}'s Turn`;
-    currentCell.textContent = board[cellNum];
-    currentCell.disabled = true;
-    const result = getGameResult(board);
-    if (result === 'X' || result === 'O') {
-        end(result);
-        return;
-    } else if (result === 'tie') {
-        end('tie');
-        return;
-    }
-    xTurn = !xTurn;
-    if (mode === 'cpu') compTurn();
 }
 
 // Handles the computer's move (random open cell)
@@ -232,19 +241,22 @@ function end(turn) {
     startBtn.hidden = false;
     titleBtn.hidden = false;
     endBtn.hidden = true;
+
+    // No need to emit anything here, handled in cellClick
 }
 
 // Starts or restarts the game, resets board and UI
 function start() {
+    console.debug("start()");
     // Enable and reset all board buttons
-    const disabledBtns = document.querySelectorAll('button:disabled');
+    const disabledBtns = document.querySelectorAll('#cells button');
     disabledBtns.forEach(btn => {
         btn.textContent = '⊠';
         btn.disabled = false;
     });
 
     // Reset game state
-    xTurn = localStorage.getItem('selectedMarker') === 'X'; // Retrieve selected marker from storage
+    if (mode !== 'online') xTurn = localStorage.getItem('selectedMarker') === 'X'; // Retrieve selected marker from storage
     board = ['', '', '',
              '', '', '',
              '', '', ''];
@@ -256,6 +268,7 @@ function start() {
     startBtn.hidden = true;
     titleBtn.hidden = true;
     endBtn.hidden = false;
+    xTurn = myMarker === 'X';
 }
 
 // Reset UI and game state to default (SPA style)
@@ -273,6 +286,8 @@ function resetToTitleScreen() {
     disabledBtns.forEach(btn => {
         btn.textContent = '⊠';
     });
+
+    if (mode === 'online') socket.emit('manual-disconnect');
 
     board = undefined; // Reset array representing the board state
     xTurn = undefined; // Reset true if it's X's turn, false for O

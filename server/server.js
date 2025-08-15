@@ -12,7 +12,6 @@ app.use(express.static(path.join(__dirname, '..'))); // Serve static files from 
 let rooms = {};
 
 io.on('connection', (socket) => {
-  // Handle room join, moves, etc.
 
   // Join a room (client emits 'joinRoom' with roomId)
   socket.on('joinRoom', (roomId) => {
@@ -38,12 +37,40 @@ io.on('connection', (socket) => {
 
   // Handle player move
   socket.on('move', (data) => {
+    console.debug("on move");
     const roomId = Object.keys(rooms).find(id => rooms[id].players.includes(socket.id));
     socket.to(roomId).emit('move', data); // Broadcast move to other player
   });
 
+  // Handle game end
+  socket.on('gameEnd', (result) => {
+    const roomId = Object.keys(rooms).find(id => rooms[id].players.includes(socket.id));
+    if (roomId) {
+      io.to(roomId).emit('gameEnd', result);
+    }
+  });
+
+  // Handle manual disconnect
+  socket.on('manual-disconnect', () => {
+    console.debug("on manual disconnect");
+    for (const roomId in rooms) {
+      const idx = rooms[roomId].players.indexOf(socket.id);
+      if (idx !== -1) {
+        rooms[roomId].players.splice(idx, 1);
+        // Optionally notify other player
+        io.to(roomId).emit('playerLeft');
+        // Remove room if empty
+        if (rooms[roomId].players.length === 0) {
+          delete rooms[roomId];
+        }
+        break;
+      }
+    }
+  });
+
   // Handle disconnect
   socket.on('disconnect', () => {
+    console.debug("on disconnect");
     for (const roomId in rooms) {
       const idx = rooms[roomId].players.indexOf(socket.id);
       if (idx !== -1) {
