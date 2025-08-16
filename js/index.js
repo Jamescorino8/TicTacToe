@@ -29,28 +29,27 @@ let socket;
 // Player-specific variables for online mode
 let myMarker; // 'X' or 'O' for this player
 let myTurn = false; // true if it's this player's turn
-let roomId; // Player's joined room
+let roomId; // Player's entered room ID
 
 // Handles mode selection from the title screen (co-op, cpu, or online)
 function modeSelect(selectedMode) {
     mode = selectedMode;
     if (mode === 'online') {
         if (!socket) socket = io(); // Initialize socket.io for online mode (only once)
-        roomId = prompt("Enter Room ID");
+        roomId = prompt("Enter Room ID"); // TODO require input or fix cancel
         socket.emit('joinRoom', roomId);
         titleContainer.hidden = true;
         // Skip marker selection (P1 = 'X', P2 = 'O')
         operatorContainer.style.display = 'flex';
         startBtn.hidden = true;
-        // Show and update Online display
         onlineDisplay.hidden = false;
-        
 
         // Listen for marker assignment
         socket.on('markerAssigned', (marker) => {
             myMarker = marker;
             xTurn = marker === 'X';
             myTurn = xTurn;
+            // Display room ID with assigned marker
             onlineDisplay.textContent = `Room ID: ${roomId} | Marker: ${myMarker}`;
         });
 
@@ -64,6 +63,7 @@ function modeSelect(selectedMode) {
         socket.on('startGame', () => {
             cells.style.display = 'grid';
             start();
+            turnDisplay.textContent = `X's Turn`;
         });
 
         // Listen for when player leaves
@@ -71,10 +71,8 @@ function modeSelect(selectedMode) {
             end();
             cells.style.display = 'none';
             startBtn.hidden = true;
-            turnDisplay.innerHTML = `
-            <h2 id="turnDisplay">Player Left.</h2>
-            <h2 id="turnDisplay">Waiting for new player...</h2>
-            `;
+            turnDisplay.innerHTML = `<h2 id="turnDisplay">Player Left.</h2>
+                                     <h2 id="turnDisplay">Waiting for new player...</h2>`;
         });
 
         // Listen for moves from other player
@@ -93,6 +91,24 @@ function modeSelect(selectedMode) {
         socket.on('gameEnd', (result) => {
             end(result);
         });
+
+        // Listen if player gives up
+        socket.on('giveUp', (marker) => {
+            const disabledBtns = document.querySelectorAll('#cells button');
+            disabledBtns.forEach(btn => btn.disabled = true);
+            startBtn.hidden = false;
+            titleBtn.hidden = false;
+            endBtn.hidden = true;
+            turnDisplay.textContent = `${marker}'s Forfeit!`;
+            setTimeout(() => { turnDisplay.textContent = ""; }, 3000);
+        });
+
+        // // Listen for restart
+        // socket.on('restart', () => {
+        //     startBtn.hidden = true;
+        //     start();
+        //     turnDisplay.textContent = `X's Turn`;
+        // });
     } else {
         titleContainer.hidden = true;
         markerContainer.hidden = false;
@@ -208,7 +224,6 @@ function compMove(openCells) {
             optimalMove = openCells[i];
         }
     }
-    
     return optimalMove;
 }
 
@@ -243,13 +258,12 @@ function end(turn) {
         turnDisplay.textContent = "It's a tie!";
     } else {
         turnDisplay.textContent = "";
+        if (mode === 'online') socket.emit('giveUp', myMarker); 
     }
     // Show/hide appropriate buttons
     startBtn.hidden = false;
     titleBtn.hidden = false;
     endBtn.hidden = true;
-
-    // No need to emit anything here, handled in cellClick
 }
 
 // Starts or restarts the game, resets board and UI
@@ -270,7 +284,7 @@ function start() {
     // Set initial turn display
     turnDisplay.textContent = "";
     if (mode === 'coop') xTurn ? turnDisplay.textContent = "X's Turn" : turnDisplay.textContent = "O's Turn";
-    startBtn.textContent = "Restart";
+    startBtn.textContent = "Restart?";
     startBtn.hidden = true;
     titleBtn.hidden = true;
     endBtn.hidden = false;

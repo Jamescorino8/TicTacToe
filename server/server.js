@@ -49,6 +49,22 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle give up
+  socket.on('giveUp', (marker) => {
+    const roomId = Object.keys(rooms).find(id => rooms[id].players.includes(socket.id));
+    if (roomId) {
+      io.to(roomId).emit('giveUp', marker);
+    }
+  });
+
+  // Handle restart
+  socket.on('restart', () => {
+    const roomId = Object.keys(rooms).find(id => rooms[id].players.includes(socket.id));
+    if (roomId) {
+      io.to(roomId).emit('restart');
+    }
+  });
+
   // Handle manual disconnect
   socket.on('manual-disconnect', () => {
     for (const roomId in rooms) {
