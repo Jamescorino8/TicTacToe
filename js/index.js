@@ -10,6 +10,7 @@ const cells = document.getElementById('cells');
 const markerContainer = document.getElementById('marker-container'); 
 const operatorContainer = document.getElementById('operator-container');
 const titleContainer = document.getElementById('title-container');
+const onlineDisplay = document.getElementById('online-display');
 
 // All possible win conditions for a 3x3 board
 const winConditions = [
@@ -28,50 +29,56 @@ let socket;
 // Player-specific variables for online mode
 let myMarker; // 'X' or 'O' for this player
 let myTurn = false; // true if it's this player's turn
+let roomId; // Player's joined room
 
 // Handles mode selection from the title screen (co-op, cpu, or online)
 function modeSelect(selectedMode) {
     mode = selectedMode;
     if (mode === 'online') {
-        console.debug("online start");
         if (!socket) socket = io(); // Initialize socket.io for online mode (only once)
-        socket.emit('joinRoom', 'room123');
+        roomId = prompt("Enter Room ID");
+        socket.emit('joinRoom', roomId);
         titleContainer.hidden = true;
         // Skip marker selection (P1 = 'X', P2 = 'O')
         operatorContainer.style.display = 'flex';
         startBtn.hidden = true;
+        // Show and update Online display
+        onlineDisplay.hidden = false;
+        
 
         // Listen for marker assignment
         socket.on('markerAssigned', (marker) => {
-            console.debug("on markerAssigned");
             myMarker = marker;
             xTurn = marker === 'X';
             myTurn = xTurn;
+            onlineDisplay.textContent = `Room ID: ${roomId} | Marker: ${myMarker}`;
         });
 
         // Listen for waiting status
         socket.on('waiting', () => {
-            console.debug("on waiting");
             turnDisplay.textContent = 'Waiting for player...';
             titleBtn.hidden = false;
         });
 
         // Listen for game start
         socket.on('startGame', () => {
-            console.debug("on startGame");
             cells.style.display = 'grid';
             start();
         });
 
-        // // Listen for when player leaves
-        // socket.on('playerLeft', () => {
-        //     console.debug("on playerLeft");
-            
-        // });
+        // Listen for when player leaves
+        socket.on('playerLeft', () => {
+            end();
+            cells.style.display = 'none';
+            startBtn.hidden = true;
+            turnDisplay.innerHTML = `
+            <h2 id="turnDisplay">Player Left.</h2>
+            <h2 id="turnDisplay">Waiting for new player...</h2>
+            `;
+        });
 
         // Listen for moves from other player
         socket.on('move', (data) => {
-            console.debug("on move");
             const currentCell = document.getElementById(`cell-${data.cellNum}`);
             board[data.cellNum] = data.symbol;
             currentCell.textContent = data.symbol;
@@ -247,7 +254,6 @@ function end(turn) {
 
 // Starts or restarts the game, resets board and UI
 function start() {
-    console.debug("start()");
     // Enable and reset all board buttons
     const disabledBtns = document.querySelectorAll('#cells button');
     disabledBtns.forEach(btn => {
@@ -287,7 +293,10 @@ function resetToTitleScreen() {
         btn.textContent = '⊠';
     });
 
-    if (mode === 'online') socket.emit('manual-disconnect');
+    if (mode === 'online') {
+        onlineDisplay.textContent = "";
+        socket.emit('manual-disconnect');
+    }
 
     board = undefined; // Reset array representing the board state
     xTurn = undefined; // Reset true if it's X's turn, false for O

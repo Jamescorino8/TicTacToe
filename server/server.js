@@ -37,7 +37,6 @@ io.on('connection', (socket) => {
 
   // Handle player move
   socket.on('move', (data) => {
-    console.debug("on move");
     const roomId = Object.keys(rooms).find(id => rooms[id].players.includes(socket.id));
     socket.to(roomId).emit('move', data); // Broadcast move to other player
   });
@@ -52,13 +51,16 @@ io.on('connection', (socket) => {
 
   // Handle manual disconnect
   socket.on('manual-disconnect', () => {
-    console.debug("on manual disconnect");
     for (const roomId in rooms) {
       const idx = rooms[roomId].players.indexOf(socket.id);
       if (idx !== -1) {
         rooms[roomId].players.splice(idx, 1);
-        // Optionally notify other player
-        io.to(roomId).emit('playerLeft');
+        // If one player remains, reassign marker to 'X' and notify only them
+        if (rooms[roomId].players.length === 1) {
+          const remainingSocketId = rooms[roomId].players[0]; // Socket of player remaining in room
+          io.to(remainingSocketId).emit('markerAssigned', 'X');
+          io.to(remainingSocketId).emit('playerLeft');
+        }
         // Remove room if empty
         if (rooms[roomId].players.length === 0) {
           delete rooms[roomId];
@@ -70,13 +72,16 @@ io.on('connection', (socket) => {
 
   // Handle disconnect
   socket.on('disconnect', () => {
-    console.debug("on disconnect");
     for (const roomId in rooms) {
       const idx = rooms[roomId].players.indexOf(socket.id);
       if (idx !== -1) {
         rooms[roomId].players.splice(idx, 1);
-        // Optionally notify other player
-        io.to(roomId).emit('playerLeft');
+        // If one player remains, reassign marker to 'X' and notify only them
+        if (rooms[roomId].players.length === 1) {
+          const remainingSocketId = rooms[roomId].players[0];
+          io.to(remainingSocketId).emit('markerAssigned', 'X');
+          io.to(remainingSocketId).emit('playerLeft');
+        }
         // Remove room if empty
         if (rooms[roomId].players.length === 0) {
           delete rooms[roomId];
