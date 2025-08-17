@@ -7,7 +7,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 const path = require('path');
-app.use(express.static(path.join(__dirname, '..'))); // Serve static files from the project root
+app.use(express.static(path.join(__dirname, '../public'))); // Serve static files from the public directory
 
 let rooms = {};
 
