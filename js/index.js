@@ -42,7 +42,9 @@ function modeSelect(selectedMode) {
         // Skip marker selection (P1 = 'X', P2 = 'O')
         operatorContainer.style.display = 'flex';
         startBtn.hidden = true;
+        startBtn.textContent = "restart?";
         onlineDisplay.hidden = false;
+        turnDisplay.hidden = false;
 
         // Listen for marker assignment
         socket.on('markerAssigned', (marker) => {
@@ -68,7 +70,6 @@ function modeSelect(selectedMode) {
 
         // Listen for when player leaves
         socket.on('playerLeft', () => {
-            end();
             cells.style.display = 'none';
             startBtn.hidden = true;
             turnDisplay.innerHTML = `<h2 id="turnDisplay">Player Left.</h2>
@@ -100,15 +101,24 @@ function modeSelect(selectedMode) {
             titleBtn.hidden = false;
             endBtn.hidden = true;
             turnDisplay.textContent = `${marker}'s Forfeit!`;
-            setTimeout(() => { turnDisplay.textContent = ""; }, 3000);
         });
 
         // // Listen for restart
-        // socket.on('restart', () => {
-        //     startBtn.hidden = true;
-        //     start();
-        //     turnDisplay.textContent = `X's Turn`;
-        // });
+        socket.on('restart', () => {
+            const disabledBtns = document.querySelectorAll('#cells button');
+            disabledBtns.forEach(btn => {
+                btn.textContent = '⊠';
+                btn.disabled = false;
+            });
+            board = ['', '', '',
+                     '', '', '',
+                     '', '', ''];
+            turnDisplay.textContent = `X's Turn`;
+            myTurn = myMarker === 'X';
+            startBtn.hidden = true;
+            titleBtn.hidden = true;
+            endBtn.hidden = false;
+        });
     } else {
         titleContainer.hidden = true;
         markerContainer.hidden = false;
@@ -247,14 +257,14 @@ function getGameResult(currentBoard) {
 }
 
 // Ends the game, disables board, and displays result
-function end(turn) {
+function end(condition) {
     // Disable all cell buttons
     const disabledBtns = document.querySelectorAll('#cells button');
     disabledBtns.forEach(btn => btn.disabled = true);
     // Show result message
-    if (turn === 'X' || turn === 'O') {
-        turnDisplay.textContent = `${turn}'s Win!`;
-    } else if (turn === 'tie') {
+    if (condition === 'X' || condition === 'O') {
+        turnDisplay.textContent = `${condition}'s Win!`;
+    } else if (condition === 'tie') {
         turnDisplay.textContent = "It's a tie!";
     } else {
         turnDisplay.textContent = "";
@@ -268,6 +278,10 @@ function end(turn) {
 
 // Starts or restarts the game, resets board and UI
 function start() {
+    if (mode === 'online') {
+        socket.emit('restart');
+        return;
+    }
     // Enable and reset all board buttons
     const disabledBtns = document.querySelectorAll('#cells button');
     disabledBtns.forEach(btn => {
@@ -284,11 +298,11 @@ function start() {
     // Set initial turn display
     turnDisplay.textContent = "";
     if (mode === 'coop') xTurn ? turnDisplay.textContent = "X's Turn" : turnDisplay.textContent = "O's Turn";
-    startBtn.textContent = "Restart?";
+    startBtn.textContent = "restart?";
     startBtn.hidden = true;
     titleBtn.hidden = true;
     endBtn.hidden = false;
-    xTurn = myMarker === 'X';
+    // xTurn = myMarker === 'X';
 }
 
 // Reset UI and game state to default (SPA style)
@@ -298,7 +312,7 @@ function resetToTitleScreen() {
     cells.style.display = 'none';
     operatorContainer.style.display = 'none';
     titleContainer.hidden = false;
-    turnDisplay.textContent = '';
+    turnDisplay.textContent = "";
     startBtn.hidden = true;
     startBtn.textContent = "Start";
 
@@ -308,8 +322,10 @@ function resetToTitleScreen() {
     });
 
     if (mode === 'online') {
-        onlineDisplay.textContent = "";
+        onlineDisplay.hidden = true;
+        turnDisplay.hidden = true;
         socket.emit('manual-disconnect');
+        return;
     }
 
     board = undefined; // Reset array representing the board state
