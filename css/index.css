@@ -24,7 +24,7 @@ body {
     text-decoration: underline;
 }
 
-#turnDisplay {
+#turn-display {
     color: hsl(0, 0%, 75%);
     font-size: 2rem;
     text-align: center;

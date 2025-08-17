@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>TicTacToe</title>
+        <title>Tic-Tac-Toe</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="./css/index.css">
@@ -13,21 +13,21 @@
 
             <h1 id="myH1">Tic-Tac-Toe</h1>
             <h3 id="online-display" hidden></h3>
-            <h2 id="turnDisplay"></h2>
+            <h2 id="turn-display"></h2>
 
             <div id="title-container">
                 <h2>Select Mode</h2>
                 <div id="button-container">
-                    <button type="button" id="coopBtn" onclick="modeSelect('coop')">👥</button>
                     <button type="button" id="compBtn" onclick="modeSelect('cpu')">👤</button>
+                    <button type="button" id="coopBtn" onclick="modeSelect('coop')">👥</button>
                     <button type="button" id="onlineBtn" onclick="modeSelect('online')">🌐</button>
                 </div>
             </div>
 
             <div id="marker-container" hidden>
                 <h2 id="marker-display">Choose Marker</h2>
-                <button type="button" id="xBtn" onclick="selectMarker('X')">X</button>
-                <button type="button" id="oBtn" onclick="selectMarker('O')">O</button>
+                <button type="button" onclick="selectMarker('X')">X</button>
+                <button type="button" onclick="selectMarker('O')">O</button>
             </div>
             
             <div id="cells" style="display: none">

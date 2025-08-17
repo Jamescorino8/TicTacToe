@@ -1,7 +1,8 @@
 // Tic-Tac-Toe Game Logic
 
 // DOM elements
-const turnDisplay = document.getElementById('turnDisplay');
+const turnDisplay = document.getElementById('turn-display');
+const onlineDisplay = document.getElementById('online-display');
 const startBtn = document.getElementById('startBtn');
 const titleBtn = document.getElementById('titleBtn');
 const endBtn = document.getElementById('endBtn');
@@ -10,7 +11,6 @@ const cells = document.getElementById('cells');
 const markerContainer = document.getElementById('marker-container'); 
 const operatorContainer = document.getElementById('operator-container');
 const titleContainer = document.getElementById('title-container');
-const onlineDisplay = document.getElementById('online-display');
 
 // All possible win conditions for a 3x3 board
 const winConditions = [
@@ -39,7 +39,6 @@ function modeSelect(selectedMode) {
         roomId = prompt("Enter Room ID"); // TODO require input or fix cancel
         socket.emit('joinRoom', roomId);
         titleContainer.hidden = true;
-        // Skip marker selection (P1 = 'X', P2 = 'O')
         operatorContainer.style.display = 'flex';
         startBtn.hidden = true;
         startBtn.textContent = "restart?";
@@ -51,7 +50,6 @@ function modeSelect(selectedMode) {
             myMarker = marker;
             xTurn = marker === 'X';
             myTurn = xTurn;
-            // Display room ID with assigned marker
             onlineDisplay.textContent = `Room ID: ${roomId} | Marker: ${myMarker}`;
         });
 
@@ -82,13 +80,12 @@ function modeSelect(selectedMode) {
             board[data.cellNum] = data.symbol;
             currentCell.textContent = data.symbol;
             currentCell.disabled = true;
-            // Update turn
             xTurn = !xTurn;
             myTurn = true;
             turnDisplay.textContent = `${myMarker}'s Turn`;
         });
 
-        // Listen for game end from server
+        // Listen for game end
         socket.on('gameEnd', (result) => {
             end(result);
         });
@@ -103,7 +100,7 @@ function modeSelect(selectedMode) {
             turnDisplay.textContent = `${marker}'s Forfeit!`;
         });
 
-        // // Listen for restart
+        // Listen for restart
         socket.on('restart', () => {
             const disabledBtns = document.querySelectorAll('#cells button');
             disabledBtns.forEach(btn => {
@@ -182,7 +179,7 @@ function cellClick(cellNum) {
 function compTurn() {
     let openCells = [];
     // Find all empty cells
-    board.forEach((cell, i) => { // Change to Array.filter() ???
+    board.forEach((cell, i) => {
         if (cell === '') openCells.push(i);
     });
 
@@ -302,7 +299,6 @@ function start() {
     startBtn.hidden = true;
     titleBtn.hidden = true;
     endBtn.hidden = false;
-    // xTurn = myMarker === 'X';
 }
 
 // Reset UI and game state to default (SPA style)
@@ -314,7 +310,7 @@ function resetToTitleScreen() {
     titleContainer.hidden = false;
     turnDisplay.textContent = "";
     startBtn.hidden = true;
-    startBtn.textContent = "Start";
+    startBtn.textContent = "start";
 
     const disabledBtns = document.querySelectorAll('button:disabled');
     disabledBtns.forEach(btn => {

@@ -23,7 +23,7 @@ io.on('connection', (socket) => {
     rooms[roomId].players.push(socket.id);
     socket.join(roomId);
 
-    // Assign marker (first player is 'X', second is 'O')
+    // Assign marker (first player is always 'X', second is 'O')
     let marker = rooms[roomId].players.length === 1 ? 'X' : 'O';
     socket.emit('markerAssigned', marker);
 
